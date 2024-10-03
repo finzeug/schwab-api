@@ -6,7 +6,7 @@ def account_summary():
     return "https://client.schwab.com/clientapps/accounts/summary/"
 
 def trade_ticket():
-    return "https://client.schwab.com/app/trade/tom/#/trade"
+    return "https://client.schwab.com/app/trade/tom/trade?ShowUN=YES"
 
 # New API
 def order_verification_v2():
@@ -29,6 +29,12 @@ def cancel_order_v2():
 
 def transaction_history_v2():
     return "https://ausgateway.schwab.com/api/is.TransactionHistoryWeb/TransactionHistoryInterface/TransactionHistory/brokerage/transactions/export"
+
+def lot_details_v2():
+    return "https://ausgateway.schwab.com/api/is.Holdings/V1/Lots"
+
+def option_chains_v2():
+    return "https://ausgateway.schwab.com/api/is.CSOptionChainsWeb/v1/OptionChainsPort/OptionChains/chains"
 
 # Old API
 def positions_data():
