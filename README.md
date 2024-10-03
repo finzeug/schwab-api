@@ -1,9 +1,19 @@
 # Schwab API
 
-**This is not an official API or even a stable recreation of a Charles Schwab API. Functionality may change with any updates made by Schwab. As of April 2023, this API continues to work as expected.**
+**This is not an official API or even a stable recreation of a Charles Schwab API. Functionality may change with any updates made by Schwab. As of December 2023, this API continues to work as expected.**
 
 This package enables buying and selling securities programmatically on Charles Schwab. Currently, we use a headless browser to automate logging in in order to get authorization cookies. All other functionality is done through web requests made to Schwab's own API.
 
+## Features
+
+* Buying and Selling tickers
+* Get quotes for multiple tickers
+* Get order information
+* Account and Position Information
+* Limit / Stop orders are possible using trade_v2 parameters
+* Multiple individual account support
+* MFA and TOTP authentication
+* Web Request implementation (with the exception of authentication)
 
 ## Live Demo
 
@@ -26,11 +36,13 @@ pip install schwab-api
 python -m playwright install
 ```
 
-### Create a TOTP Authentication Token
+### Set up your account to use TOTP
 
-In order to login to Schwab without having to go through SMS verification everytime, we can create an authentication token (TOTP) and attach that to our account.
+In order to login to Schwab without having to go through SMS verification everytime, you'll need to create an authentication token (TOTP) and attach that to your Schwab account.
 
-If you'd like an easy way to do this, you can [go to my website and generate a TOTP there](https://itsjafer.com/#/schwab) by clicking 'Generate TOTP' and following the instructions.
+
+1. Download a TOTP app like Google Authenticator.
+2. [Go to my website and generate a TOTP key there](https://itsjafer.com/#/schwab) by clicking 'Generate TOTP' and following the instructions. You should get a Symantec ID and a TOTP key/QR code.
 
 Alternatively, you can do this programmatically:
 
@@ -43,16 +55,13 @@ print("Your symantec ID is: " + symantec_id)
 print("Your TOTP secret is: " + totp_secret)
 ```
 
-For the TOTP Secret:
-
-1. Download Duo Mobile, Google Authenticator, or any other authenticator of your choice and create an entry using the TOTP secret. You will be prompted to generate a code everytime you log in to Schwab and will need an authenticator app to do so.
-1. **Keep this TOTP secret handy** as you'll need to pass it to this API in order to login.
-
-For the Symantec ID:
-
-1. Log in to Schwab and go to your [security center](https://client.schwab.com/clientapps/access/securityCenter#/main/epass). 
-1. Under two-step verification, select "Always at login", and then select "Security Token". 
-1. **Enter the symantec ID here that you generated using the code above**.
+3. Open Google Authenticator and click the `+` button to add a new account
+4. Either enter the TOTP key manually and scan the QR code from step 2.
+5. Log in to the Schwab [security center](https://client.schwab.com/app/access/securitysettings/#/security/verification)
+6. Under Two-Step Verification, select Always at Login, and then select "Security Token" as your method.
+7. Enter the Symantec ID from step 2 into the Credential ID field.
+8. Enter the 6-digit code from Google Authenticator into the Security Code field.
+9. Done! Now keep your TOTP secret from step 2 handy as your `SCHWAB_TOTP_SECRET` in your `.env` file under the example directory.
 
 ### Quickstart
 
@@ -74,6 +83,10 @@ logged_in = api.login(
     totp_secret=totp_secret # Get this by generating TOTP at https://itsjafer.com/#/schwab
 )
 
+# Get information about a few tickers
+quotes = api.quote_v2(["PFE", "AAPL"])
+pprint.pprint(quotes)
+
 # Get information about all accounts holdings
 print("Getting account holdings information")
 account_info = api.get_account_info()
@@ -83,7 +96,7 @@ print("The following account numbers were found: " + str(account_info.keys()))
 
 print("Placing a dry run trade for AAPL stock")
 # Place a dry run trade for account 99999999
-messages, success = api.trade(
+messages, success = api.trade_v2(
     ticker="AAPL", 
     side="Buy", #or Sell
     qty=1, 
@@ -96,16 +109,31 @@ print("The order verification produced the following messages: ")
 pprint.pprint(messages)
 ```
 
-## Features
-
-* Buying and Selling tickers
-* Multiple individual account support
-* MFA and TOTP authentication
-* Account and Position Information
-* Headless playwright implementation
-
 ## TODO
 
 * Currently, we use a headless browser to login to Schwab; in the future, we want to do this purely with requests.
 * Documentation of functionality
+
+## Development Guide
+
+Want to extend functionality? Here's how to get started:
+
+1. After forking, install dependencies:
+```
+pip install .
+playwright install && playwright install-deps
+```
+
+2. Run the example script:
+```
+pip install . && python example/example.py
+```
+
+3. Iterate on existing code: 
+* Authentication largely exists in `schwab_api/authentication.py` and is done using Playwright.
+* Trading happens in `schwab_api/schwab.py` in two functions: `trade` and `trade_v2` which use the legacy and new API respectively. Neither of these APIs are documented and were largely just reverse engineering through sniffing network requests in the UI.
+
+### Deployment
+
+Bumping the version number in `setup.py` will automatically trigger a deployment that must be approved by itsjafer@.
 

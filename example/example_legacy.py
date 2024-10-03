@@ -20,36 +20,22 @@ logged_in = api.login(
     totp_secret=totp_secret # Get this using itsjafer.com/#/schwab.
 )
 
-# Get information about a few tickers
-quotes = api.quote_v2(["PFE", "AAPL"])
-pprint.pprint(quotes)
-
 # Get information about your accounts holdings
 print("Getting account holdings information")
-account_info = api.get_account_info_v2()
+account_info = api.get_account_info()
 pprint.pprint(account_info)
-account_numbers = list(account_info.keys())
-print("The following account numbers were found: " + str(account_numbers))
-
-# Get transaction history for an account
-print("Getting full transaction history for account " + str(account_numbers[0]))
-transaction_history = api.get_transaction_history_v2(account_numbers[0])
-pprint.pprint(transaction_history)
+print("The following account numbers were found: " + str(account_info.keys()))
 
 print("Placing a dry run trade for PFE stock")
 # Place a dry run trade for each account
-messages, success = api.trade_v2(
+messages, success = api.trade(
     ticker="PFE", 
     side="Buy", #or Sell
     qty=1, 
-    account_id=next(iter(account_info)), # Replace with your account number
+    account_id=98494830, # Replace with your account number
     dry_run=True # If dry_run=True, we won't place the order, we'll just verify it.
 )
 
 print("The order verification was " + "successful" if success else "unsuccessful")
 print("The order verification produced the following messages: ")
 pprint.pprint(messages)
-
-orders = api.orders_v2()
-
-pprint.pprint(orders)
